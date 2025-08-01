@@ -1,5 +1,6 @@
 import { OrderService } from '../services/order.service.js';
 import { successResponse } from '../config/successHandler.js';
+import { pool as db } from '../config/db.js';
 
 export class OrderController {
   constructor() {
@@ -7,8 +8,21 @@ export class OrderController {
   }
 
   getAll = async (req, res) => {
-    const orders = await this.service.getAll();
-    res.json(successResponse(orders));
+    try {
+      const [orders] = await db.query(`
+        SELECT 
+          o.*, 
+          IFNULL(SUM(op.quantity), 0) AS product_count
+        FROM orders o
+        LEFT JOIN order_products op ON o.id = op.order_id
+        GROUP BY o.id
+      `);
+
+      res.json(successResponse(orders));
+    } catch (error) {
+      console.error('Error al obtener órdenes:', error);
+      res.status(500).json({ success: false, message: 'Error al obtener órdenes' });
+    }
   };
 
   getById = async (req, res) => {

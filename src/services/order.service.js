@@ -6,8 +6,12 @@ export class OrderService {
     this.repository = new OrderRepository();
   }
 
-  async getAll() {
-    return await this.repository.findAll();
+  async getAllWithProductCount() {
+    const orders = await this.repository.findAllWithProductCount();
+    return orders.map(order => ({
+      ...order,
+      productCount: order.items.reduce((sum, item) => sum + item.quantity, 0)
+    }));
   }
 
   async getById(id) {
