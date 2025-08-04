@@ -5,6 +5,9 @@ import orderRoutes from './routes/order.routes.js';
 import productRoutes from './routes/product.routes.js';
 
 dotenv.config();
+
+const PORT = process.env.PORT || 3000; 
+
 const app = express();
 
 app.use(cors());
