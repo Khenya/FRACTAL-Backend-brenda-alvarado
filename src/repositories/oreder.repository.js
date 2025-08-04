@@ -33,9 +33,23 @@ export class OrderRepository {
       const orderId = result.rows[0].id;
 
       for (const item of products) {
+        const quantity = parseInt(item.quantity) || 1;
+        const productId = parseInt(item.product_id);
+
+        const { rows: productRows } = await client.query(
+          'SELECT unit_price FROM products WHERE id = $1',
+          [productId]
+        );
+
+        if (productRows.length === 0) {
+          throw new Error(`Producto ID ${productId} no existe`);
+        }
+
+        const totalPrice = parseFloat(productRows[0].unit_price) * quantity;
+
         await client.query(
-          'INSERT INTO order_products (order_id, product_id, quantity) VALUES ($1, $2, $3)',
-          [orderId, item.product_id, item.quantity]
+          'INSERT INTO order_products (order_id, product_id, quantity, total_price) VALUES ($1, $2, $3, $4)',
+          [orderId, productId, quantity, totalPrice]
         );
       }
 

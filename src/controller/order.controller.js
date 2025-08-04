@@ -32,9 +32,21 @@ export class OrderController {
   };
 
   create = async (req, res) => {
-    const newOrder = await this.service.create(req.body);
-    res.status(201).json(successResponse(newOrder, 'Orden creada'));
+    try {
+      const newOrder = await this.service.create(req.body);
+      res.status(201).json(successResponse(newOrder, 'Orden creada'));
+    } catch (error) {
+      console.error('❌ Error al crear orden:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al crear orden',
+        error: error.message,
+        stack: error.stack
+      });
+    }
   };
+
+
 
   update = async (req, res) => {
     const id = parseInt(req.params.id);
