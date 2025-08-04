@@ -7,11 +7,11 @@ export class OrderRepository {
   }
 
   async findById(id) {
-    const [orders] = await pool.query("SELECT * FROM orders WHERE id = ?", [id]);
+    const [orders] = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
     if (orders.length === 0) return null;
 
     const [products] = await pool.query(
-      "SELECT product_id, quantity, total_price FROM order_products WHERE order_id = ?",
+      "SELECT product_id, quantity, total_price FROM order_products WHERE order_id = $1",
       [id]
     );
 
@@ -30,13 +30,13 @@ export class OrderRepository {
 
       // 1. Actualiza campos de la orden
       await conn.query(
-        "UPDATE orders SET order_number = ?, date = ?, final_price = ?, status = ? WHERE id = ?",
+        "UPDATE orders SET order_number = $1, date = $2, final_price = $3, status = $4 WHERE id = $5",
         [orderFields.order_number, orderFields.date, orderFields.final_price, orderFields.status, id]
       );
 
 
       // 2. Elimina productos actuales
-      await conn.query("DELETE FROM order_products WHERE order_id = ?", [id]);
+      await conn.query("DELETE FROM order_products WHERE order_id = $1", [id]);
 
       // 3. Agrega nuevos productos
       for (const p of products) {
@@ -45,7 +45,7 @@ export class OrderRepository {
 
         // Precio unitario desde la tabla de productos
         const [[product]] = await conn.query(
-          "SELECT unit_price FROM products WHERE id = ?",
+          "SELECT unit_price FROM products WHERE id = $1",
           [productId]
         );
 
@@ -54,7 +54,7 @@ export class OrderRepository {
         const totalPrice = parseFloat(product.unit_price) * quantity;
 
         await conn.query(
-          "INSERT INTO order_products (order_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)",
+          "INSERT INTO order_products (order_id, product_id, quantity, total_price) VALUES ($1, $2, $3, $4)",
           [id, productId, quantity, totalPrice]
         );
       }

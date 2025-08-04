@@ -9,16 +9,16 @@ export class OrderController {
 
   getAll = async (req, res) => {
     try {
-      const [orders] = await db.query(`
+      const result = await db.query(`
         SELECT 
           o.*, 
-          IFNULL(SUM(op.quantity), 0) AS product_count
+          COALESCE(SUM(op.quantity), 0) AS product_count
         FROM orders o
         LEFT JOIN order_products op ON o.id = op.order_id
         GROUP BY o.id
       `);
 
-      res.json(successResponse(orders));
+      res.json(successResponse(result.rows));
     } catch (error) {
       console.error('Error al obtener órdenes:', error);
       res.status(500).json({ success: false, message: 'Error al obtener órdenes' });
